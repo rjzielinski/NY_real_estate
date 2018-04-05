@@ -1,0 +1,93 @@
+---
+title: "nyhousing_wrangling"
+author: "Robbie Zielinski"
+date: "2/3/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(RMySQL)
+library(ggmap) 
+library(operators)
+library(tidyverse)
+library(pbapply)
+library(tcltk)
+library(lubridate)
+library(doParallel)
+```
+
+
+```{r}
+db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
+transactions <- tbl(db, "transactions")
+#rs <- dbSendQuery(db, "SELECT * FROM transactions")
+#transactions <- fetch(rs, n=-1) %>% as.data.frame()
+```
+
+```{r}
+transactions <- transactions %>%
+  mutate(address_full = CONCAT(Address, ", ", Town, ", ", "NY"))
+#transactions2 <- transactions %>%
+#  filter(Town == "Rochester")
+```
+
+```{r}
+no_cores <- detectCores() - 1
+registerDoParallel(cores=no_cores)  
+cluster <- makeCluster(no_cores, type="FORK") 
+full_address <- transactions %>%
+  select(address_full) %>%
+  collect() %>%
+  unlist() %>%
+  as.vector()
+geocodes <- pblapply(full_address, function(x) geocode(x, output = "latlon", source = "dsk"), cl = cluster)  
+stopCluster(cluster)
+```
+
+```{r}
+full_address <- data.frame(full_address)
+names(full_address) <- c("address_full")
+geocodes <- unlist(geocodes) %>%
+  matrix(ncol = 2, byrow = TRUE) %>%
+  data.frame
+names(geocodes) <- c("lon", "lat")
+geocodes <- bind_cols(full_address, geocodes)
+transactions <- bind_cols(transactions, geocodes)
+transactions <- transactions %>%
+  left_join(geocodes, by = "address_full", copy = TRUE)
+```
+
+```
+pb <- tkProgressBar(title = "progress bar", min = 0,
+                    max = nrow(transactions), width = 300)
+
+for(i in 1:nrow(transactions2)) { ### Allows me to continue with errors
+  result <- tryCatch(geocode(transactions2$address_full[i], output = "latlon", source = "dsk"),
+                     error = function(e) data.frame(lon = NA, lat = NA, address = NA))
+  transactions2$lon[i] <- as.numeric(result[1])
+  transactions2$lat[i] <- as.numeric(result[2])
+  setTkProgressBar(pb, i, label=paste( round(i/nrow(transactions2)*100, 0),
+                                        "% done"))
+}
+
+close(pb)
+```
+
+
+```{r}
+transactions <- transactions %>%
+  mutate(SalePrice = REPLACE(SalePrice, ',', ''),
+         month = SUBSTRING_INDEX(SaleDate, '/', 1),
+         day = SUBSTRING_INDEX(SUBSTRING_INDEX(SaleDate, '/', 2), '/', -1),
+         year = SUBSTRING_INDEX(SaleDate, '/', -1))
+```
+
+```{r}
+dbWriteTable(db, "transactions2", collect(transactions), overwrite = TRUE)
+```
+
+

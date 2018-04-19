@@ -1,4 +1,3 @@
----
 title: "nyhousing_wrangling"
 author: "Robbie Zielinski"
 date: "2/3/2018"
@@ -24,13 +23,14 @@ library(doParallel)
 ```{r}
 db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
 transactions <- tbl(db, "transactions")
-#rs <- dbSendQuery(db, "SELECT * FROM transactions")
-#transactions <- fetch(rs, n=-1) %>% as.data.frame()
 ```
 
 ```{r}
 transactions <- transactions %>%
   mutate(address_full = CONCAT(Address, ", ", Town, ", ", "NY"))
+
+#transactions <- transactions %>%
+#  filter(Town == 'Albany')
 #transactions2 <- transactions %>%
 #  filter(Town == "Rochester")
 ```
@@ -44,7 +44,7 @@ full_address <- transactions %>%
   collect() %>%
   unlist() %>%
   as.vector()
-geocodes <- pblapply(full_address, function(x) geocode(x, output = "latlon", source = "dsk"), cl = cluster)  
+geocodes <- pblapply(full_address, function(x) tryCatch(geocode(x, output = "latlon", source = "dsk"), error = function(e) data.frame(lon = NA, lat = NA)), cl = cluster)  
 stopCluster(cluster)
 ```
 
@@ -56,9 +56,7 @@ geocodes <- unlist(geocodes) %>%
   data.frame
 names(geocodes) <- c("lon", "lat")
 geocodes <- bind_cols(full_address, geocodes)
-transactions <- bind_cols(transactions, geocodes)
-transactions <- transactions %>%
-  left_join(geocodes, by = "address_full", copy = TRUE)
+full_address <- NULL
 ```
 
 ```
@@ -76,10 +74,18 @@ for(i in 1:nrow(transactions2)) { ### Allows me to continue with errors
 
 close(pb)
 ```
+```{r}
+db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
+transactions <- tbl(db, "transactions")
+transactions <- transactions %>%
+  mutate(address_full = CONCAT(Address, ", ", Town, ", ", "NY"))
+transactions2 <- transactions %>%
+  left_join(geocodes, by = "address_full", copy = TRUE)
+```
 
 
 ```{r}
-transactions <- transactions %>%
+transactions2 <- transactions2 %>%
   mutate(SalePrice = REPLACE(SalePrice, ',', ''),
          month = SUBSTRING_INDEX(SaleDate, '/', 1),
          day = SUBSTRING_INDEX(SUBSTRING_INDEX(SaleDate, '/', 2), '/', -1),
@@ -87,7 +93,8 @@ transactions <- transactions %>%
 ```
 
 ```{r}
-dbWriteTable(db, "transactions2", collect(transactions), overwrite = TRUE)
+transactions2 <- collect(transactions2)
+dbWriteTable(db, "transactions2", transactions2, overwrite = TRUE)
 ```
 
 

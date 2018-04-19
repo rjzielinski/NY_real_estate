@@ -1,0 +1,45 @@
+---
+title: "New York Real Estate Trends"
+author: ''
+date: ''
+output:
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+```{r, setup, include=FALSE}
+require(mosaic)# Load additional packages here 
+library(RMySQL)
+library(ggmap)
+library(leaflet)
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+trellis.par.set(theme=theme.mosaic()) # change default color scheme for lattice
+knitr::opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+```
+
+```{r, include = FALSE}
+db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
+transactions <- tbl(db, "transactions2")
+```
+
+```{r, include = FALSE}
+transactions <- transactions[!is.na(transactions$lon),]
+samp <- transactions[1:500,]
+#transactions_2017 
+```
+
+
+```{r}
+map <- get_map(location = 'Albany, NY', maptype = "terrain", source = "stamen")
+ggmap(map) + geom_point(aes(x = lon, y = lat, col = log(SalePrice)), data = transactions, size = 1, alpha = .2, position = "jitter") + scale_color_gradient(low = "Blue", high = "Red")
+```
+

@@ -1,0 +1,33 @@
+---
+title: "Reading and Saving SQL Data"
+author: "Robbie Zielinski"
+date: "4/24/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
+transactions <- tbl(db, "transactions2")
+```
+
+```{r, include = FALSE}
+transactions <- collect(transactions)
+transactions <- transactions %>%
+  mutate(SaleDate = mdy(SaleDate),
+         month = as.numeric(month),
+         day = as.numeric(day),
+         year = as.numeric(year),
+         SalePrice = as.numeric(SalePrice),
+         Long = lon,
+         Lat = lat) %>%
+  filter(Lat > 40 & Lat < 46) %>%
+  filter(Long > -80 & Long < -70)
+```
+
+```{r}
+save(transactions, file="nyhousing_transactions.Rda")
+```

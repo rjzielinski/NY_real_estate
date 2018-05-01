@@ -1,16 +1,27 @@
 library(shiny)
 library(tidyverse)
 library(readr)
+library(DT)
 library(leaflet)
 
 load("nyhousing_transactions.Rda")
 
+transactions <- transactions %>%
+  select(County, Town, Address, ZipCode, SalePrice, SaleDate, address_full,
+         lon, lat, month, day, year) %>%
+  mutate(County = as.factor(County),
+         Town = as.factor(Town),
+         ZipCode = as.factor(ZipCode),
+         SalePrice = as.numeric(SalePrice),
+         month = as.numeric(month),
+         day = as.numeric(day),
+         year = as.numeric(year))
+
 # create codebook
-description <- c("names", "County", "Town Name", 
-                 "Street Address", "Zip Code", "Sale Price", "Sale Date", 
-                 "Name of Seller", "Name of Buyer", "ID", "Full Address",
+description <- c("County", "Town Name", 
+                 "Street Address", "Zip Code", "Sale Price", "Sale Date",
                  "Full Address", "Longitude", "Latitude", "Month", "Day",
-                 "Year", "Longitude", "Latitude")
+                 "Year")
 codebook <- data.frame(name=names(transactions), description)
 names(codebook) <- c("Variable", "Variable Description")
 

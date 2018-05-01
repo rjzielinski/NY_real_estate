@@ -28,7 +28,7 @@ We accessed real estate transactions for many of the counties in New York throug
 
 To present our data, we developed a Shiny app using `leaflet` to make an interactive map of the transactions. The user is able to filter by year and county, choosing the year of data they want to examine and a reference year to compare it to. On the map, we show points of all real estate transactions in the chosen counties and year, colored by their price, and in a separate tab, we provide tables giving an indication of the change in average real estate prices, population, and average salary in those counties in the time between the chosen years.
 
-! [Alt text] (Shiny_screenshot.png)
+! [Alt text] ("~/STAT231-S18-GroupM/Shiny_screenshot.png")
 
 # Next Steps
 

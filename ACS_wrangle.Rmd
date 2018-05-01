@@ -32,32 +32,36 @@ big_geo <- geo.make(state = 36, county = c("Albany", "Allegany", "Broome",
                                            "Ulster", "Warren", "Washington",
                                            "Wayne", "Westchester", "Wyoming",
                                            "Yates"))
-bigPop <- acs.fetch(geo = big_geo, endyear = 2015, span = 5, table.number ="B01003", key = acs_key)
-bigIncome <- acs.fetch(geo = big_geo, endyear = 2015,table.number =  "B19013", key = acs_key)
 ```
 
-## Including Plots
+```{r}
+bigPop_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number ="B01003", key = acs_key)
+bigPop_2014 <- acs.fetch(geo = big_geo, endyear = 2014, table.number ="B01003", key = acs_key)
+bigPop_2013 <- acs.fetch(geo = big_geo, endyear = 2013, table.number ="B01003", key = acs_key)
+bigPop_2012 <- acs.fetch(geo = big_geo, endyear = 2012, table.number ="B01003", key = acs_key)
+bigPop_2011 <- acs.fetch(geo = big_geo, endyear = 2011, table.number ="B01003", key = acs_key)
+bigPop_2010 <- acs.fetch(geo = big_geo, endyear = 2010, table.number ="B01003", key = acs_key)
+bigPop_2009 <- acs.fetch(geo = big_geo, endyear = 2009, table.number ="B01003", key = acs_key)
 
-You can also embed plots, for example:
 
+bigIncome_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number =  "B19013", key = acs_key)
+bigIncome_2014 <- acs.fetch(geo = big_geo, endyear = 2014, table.number =  "B19013", key = acs_key)
+bigIncome_2013 <- acs.fetch(geo = big_geo, endyear = 2013, table.number =  "B19013", key = acs_key)
+bigIncome_2012 <- acs.fetch(geo = big_geo, endyear = 2012, table.number =  "B19013", key = acs_key)
+bigIncome_2011 <- acs.fetch(geo = big_geo, endyear = 2011, table.number =  "B19013", key = acs_key)
+bigIncome_2010 <- acs.fetch(geo = big_geo, endyear = 2010, table.number =  "B19013", key = acs_key)
+bigIncome_2009 <- acs.fetch(geo = big_geo, endyear = 2009, table.number =  "B19013", key = acs_key)
+```
 
 ```{r}
 library(dplyr)
 
-merged <- as.data.frame(bigPop@estimate) %>% 
+merged_pop <- as.data.frame(bigPop_2015@estimate) %>% 
   mutate(county_full = rownames(.),
          county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
-  select(county,B01003_001) %>% 
+  select(county, B01003_001) %>% 
   rename("population_2015" = B01003_001) 
 merged
-```
-
-```{r}
-pastPop<- acs.fetch(geo =big_geo, endyear = 2010, table.number = "B01003", key = acs_key)
-pastPop
-past_income <-acs.fetch(geo =big_geo, endyear = 2010, table.number = "B19013", key = acs_key)
-past_income
-str(past_income)
 ```
 
 ```{r}

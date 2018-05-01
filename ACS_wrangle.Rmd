@@ -3,27 +3,37 @@
 title: "population_wrangle"
 output: pdf_document
 ---
-```{r}
-library(acs)
-big_geo <- geo.make(state = 36, county = c("Albany", "Rensselaer", "Saratoga", "Orange", "Dutchess", "Erie", "Monroe"))
-bigPop <- acs.fetch(geo = big_geo, endyear = 2015, span = 5, table.number ="B01003")
-bigPop
-```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
+```{r}
 library(acs)
-bigIncome <- acs.fetch(geo =big_geo, endyear = 2015,table.number =  "B19013")
-bigIncome
+acs_key <- "3f58748f63ce427e4133d32fd5b094e102b4ec31"
+big_geo <- geo.make(state = 36, county = c("Albany", "Allegany", "Broome",
+                                           "Cattaraugus", "Cayuga",
+                                           "Chautauqua", "Chemung", "Chenango",
+                                           "Clinton", "Columbia", "Cortland",
+                                           "Delaware", "Dutchess", "Erie",
+                                           "Essex", "Franklin", "Fulton",
+                                           "Genesee", "Greene", "Hamilton",
+                                           "Herkimer", "Jefferson", "Lewis",
+                                           "Livingston", "Madison", "Monroe",
+                                           "Montgomery", "Nassau", "Niagara",
+                                           "Oneida", "Onondaga", "Ontario",
+                                           "Orange", "Orleans", "Oswego",
+                                           "Otsego", "Putnam", "Rensselaer",
+                                           "Rockland", "St. Lawrence", "Saratoga",
+                                           "Schenectady", "Schoharie", "Schuyler",
+                                           "Seneca", "Steuben", "Suffolk",
+                                           "Sullivan", "Tioga", "Tompkins",
+                                           "Ulster", "Warren", "Washington",
+                                           "Wayne", "Westchester", "Wyoming",
+                                           "Yates"))
+bigPop <- acs.fetch(geo = big_geo, endyear = 2015, span = 5, table.number ="B01003", key = acs_key)
+bigIncome <- acs.fetch(geo = big_geo, endyear = 2015,table.number =  "B19013", key = acs_key)
 ```
 
 ## Including Plots
@@ -36,55 +46,56 @@ library(dplyr)
 
 merged <- as.data.frame(bigPop@estimate) %>% 
   mutate(county_full = rownames(.),
-         county = str_replace(county_full,"(.+) County.*","\\1") %>% tolower) %>% 
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B01003_001) %>% 
-  rename("population 2015" = B01003_001) 
+  rename("population_2015" = B01003_001) 
 merged
-
-str(merged)
 ```
 
 ```{r}
-library(acs)
-pastPop<- acs.fetch(geo =big_geo, endyear = 2010, table.number = "B01003")
+pastPop<- acs.fetch(geo =big_geo, endyear = 2010, table.number = "B01003", key = acs_key)
 pastPop
-past_income <-acs.fetch(geo =big_geo, endyear = 2010, table.number = "B19013")
+past_income <-acs.fetch(geo =big_geo, endyear = 2010, table.number = "B19013", key = acs_key)
 past_income
 str(past_income)
 ```
 
 ```{r}
-library(acs)
 past_population <- as.data.frame(pastPop@estimate) %>% 
   mutate(county_full = rownames(.),
-         county = str_replace(county_full,"(.+) County.*","\\1") %>% tolower) %>% 
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B01003_001) %>% 
-  rename("population 2010" =B01003_001) 
+  rename("population_2010" = B01003_001) 
 past_population
 ```
 
 ```{r}
 Big_income <- as.data.frame(bigIncome@estimate) %>% 
   mutate(county_full = rownames(.),
-         county = str_replace(county_full,"(.+) County.*","\\1") %>% tolower) %>% 
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B19013_001) %>% 
-  rename("Median Income 2015" =B19013_001) 
+  rename("median_income_2015" =B19013_001) 
 Big_income
 
 Past_income <- as.data.frame(past_income@estimate) %>% 
   mutate(county_full = rownames(.),
-         county = str_replace(county_full,"(.+) County.*","\\1") %>% tolower) %>% 
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B19013_001) %>% 
-  rename("Median Income 2010" = B19013_001) 
+  rename("median_income_2010" = B19013_001) 
 Past_income
 ```
 
 ```{r}
-Merged_ACS <- past_population %>%
+acs <- past_population %>%
   inner_join(merged, by = "county") %>%
   inner_join(Past_income, by = "county") %>%
   inner_join(Big_income, by = "county") 
-merged_ACS
+
+names(acs)[1] <- "County"
+```
+
+```{r}
+save(acs, file="acs.Rda")
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

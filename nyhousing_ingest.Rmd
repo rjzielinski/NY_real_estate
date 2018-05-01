@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(RMySQL)
 library(tidyverse)
+library(lubridate)
 ```
 
 ```{r, include = FALSE}
@@ -77,13 +78,13 @@ transactions <- transactions %>%
 left_join(counties_lat_lon, by = c("County" = "counties"))
 
 transactions <- transactions %>%
-mutate(lon = ifelse((lon > long_min & lon < long_max & lat > lat_min & lat < lat_max), lon, NA),
-lat = ifelse((lon > long_min & lon < long_max & lat > lat_min & lat < lat_max), lat, NA))
+mutate(Long = ifelse((Long > long_min & Long < long_max & Lat > lat_min & Lat < lat_max), Long, NA),
+Lat = ifelse((Long > long_min & Long < long_max & Lat > lat_min & Lat < lat_max), Lat, NA))
 
 
 transactions <- transactions %>%
 select(County, Town, Address, ZipCode, SalePrice, SaleDate, SellerName, BuyerName,
-id, address_full, lon, lat, month, day, year)
+id, address_full, Long, Lat, month, day, year)
 ```
 
 ```{r}

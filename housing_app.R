@@ -7,8 +7,7 @@ library(leaflet)
 load("nyhousing_transactions.Rda")
 
 transactions <- transactions %>%
-  select(County, Town, Address, ZipCode, SalePrice, SaleDate, address_full,
-         lon, lat, month, day, year) %>%
+  select(year, month, day, County, Address, Town, ZipCode, SalePrice, Long, Lat) %>%
   mutate(County = as.factor(County),
          Town = as.factor(Town),
          ZipCode = as.factor(ZipCode),
@@ -18,10 +17,8 @@ transactions <- transactions %>%
          year = as.numeric(year))
 
 # create codebook
-description <- c("County", "Town Name", 
-                 "Street Address", "Zip Code", "Sale Price", "Sale Date",
-                 "Full Address", "Longitude", "Latitude", "Month", "Day",
-                 "Year")
+description <- c("Year", "Month", "Day", "County", "Street Address", "Town Name", 
+                 "Zip Code", "Sale Price", "Longitude", "Latitude")
 codebook <- data.frame(name=names(transactions), description)
 names(codebook) <- c("Variable", "Variable Description")
 

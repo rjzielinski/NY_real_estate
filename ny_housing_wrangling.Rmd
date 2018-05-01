@@ -42,7 +42,7 @@ transactions_df <- transactions_df %>%
 ```{r}
 no_cores <- detectCores() - 1
 registerDoParallel(cores=no_cores)  
-cluster <- makeCluster(no_cores, type="FORK") 
+cluster <- makeCluster(no_cores, type="FORK")
 #full_address <- transactions %>%
 #  select(address_full) %>%
 #  collect() %>%
@@ -70,6 +70,10 @@ geocodes <- bind_cols(full_address, geocodes) %>%
 geocodes$address_full <- as.character(geocodes$address_full)
 transactions2 <- transactions_df %>%
   left_join(geocodes, by = "address_full")
+
+full_address <- NULL
+transactions_df <- NULL
+geocodes <- NULL
 ```
 
 ```
@@ -150,13 +154,13 @@ transactions2 <- transactions2 %>%
 
 ```{r}
 transactions2 <- transactions2 %>%
-  select(County, Town, Address, ZipCode, SalePrice, SaleDate, SellerName, BuyerName,
-         id, address_full, lon, lat, month, day, year)
-
-transactions2 <- transactions2 %>%
   mutate(SalePrice = gsub(",", "", SalePrice),
          FullSaleDate = SaleDate) %>%
   separate(FullSaleDate, c("month", "day", "year"), sep = "/")
+  
+transactions2 <- transactions2 %>%
+  select(County, Town, Address, ZipCode, SalePrice, SaleDate, SellerName, BuyerName,
+         id, address_full, lon, lat, month, day, year)
 ```
 
 ```{r}

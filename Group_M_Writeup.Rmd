@@ -53,7 +53,34 @@ bigPop_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number ="B01003", 
 
 bigIncome_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number =  "B19013", key = acs_key)
 ```
-The ACS package will load this data as a distinct acs object. To make our data easier to work with we seperated the estimates and created a dataframe containing the population and median income acs data.  
+The ACS package will load this data as a distinct acs object. To make our data easier to work with we seperated the estimates and created a dataframe containing the population and median income acs data. The following Chunks show this proccess. To put our data in a workable format we converted each acs object into a data frame, and then merged these frames to create one data frame containg all of our acs data.  
+
+```{r}
+Big_income <- as.data.frame(bigIncome@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("median_income_2015" =B19013_001) 
+Big_income
+```
+
+```{r}
+merged_pop <- as.data.frame(bigPop_2015@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2015" = B01003_001) 
+merged
+```
+
+```{r}
+past_population <- as.data.frame(pastPop@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B01003_001) %>% 
+  rename("population_2010" = B01003_001) 
+past_population
+```
 
 ```{r}
 Big_income <- as.data.frame(bigIncome@estimate) %>% 
@@ -63,8 +90,18 @@ Big_income <- as.data.frame(bigIncome@estimate) %>%
   rename("median_income_2015" =B19013_001) 
 Big_income
 
+Past_income <- as.data.frame(past_income@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("median_income_2010" = B19013_001) 
+Past_income
+```
+
+```{r}
 acs <- past_population %>%
   inner_join(merged, by = "county") %>%
   inner_join(Past_income, by = "county") %>%
   inner_join(Big_income, by = "county") 
+names(acs)[1] <- "County"
 ```

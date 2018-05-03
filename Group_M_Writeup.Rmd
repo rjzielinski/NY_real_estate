@@ -1,0 +1,70 @@
+---
+title: "writeup2"
+output: pdf_document
+---
+```{r }
+library(acs)
+library(RMySQL)
+library(ggmap) 
+library(operators)
+library(tidyverse)
+library(pbapply)
+library(tcltk)
+library(lubridate)
+library(doParallel)
+```
+
+Introduction:
+Economic news is ever-present in the media. With every new jobs report or stock market fluctuation, experts debate how these developments will affect individuals. However, despite these debates how people experience individual trends remains obsucre. Our analsyis hopes to uncover part of this link by observing how economic trends influence the real estate markets. Theoreticaly, an economic dowturn should coincide with a decline in home prices and number of transactions. Investigating the truth behind this statement would yield insight into economic trends affect communities and individuals.
+
+In 2008 the American economy entered a tailspin leading to a severe recessions. As a result home prices [fell dramatically](http://money.cnn.com/2009/02/12/real_estate/Latest_median_prices/). The economy has largley recovered from this crisis. However, diffrent areas of the economy have rebounded much faster than others. New York State provides a good expample of this phenomenon. The state has expereinced an uneven recovery since 2008. New York City and its surrounding counites have driven the states recovery while upstate region has had more difficulty recouping the losses of the recession. This discrepency allows us to look at intra-county housing data to compare the real estate market in a economically succesfull county versus a struggling one. Doing so allows us to see if the divergent economic trends in these counties are reflected in thier repsective real estate markets. To visualize these trends we created a shiny app using leaflet to map housing transactions throughout Upstate New York.
+
+The ACS and ACS Package
+
+The American Community Survey, or ACS collects anual data on various demographic and economic indicators. Administered by the Census Bureau, the ACS provides a wealth of state county, and census tract level data. The ACS package allows easy access to this data. We were able to use the 'geo.make' function to specefiy an area of interest of 50 New York counties.
+```{r }
+cs_key <- "3f58748f63ce427e4133d32fd5b094e102b4ec31"
+big_geo <- geo.make(state = 36, county = c("Albany", "Allegany", "Broome",
+                                           "Cattaraugus", "Cayuga",
+                                           "Chautauqua", "Chemung", "Chenango",
+                                           "Clinton", "Columbia", "Cortland",
+                                           "Delaware", "Dutchess", "Erie",
+                                           "Essex", "Franklin", "Fulton",
+                                           "Genesee", "Greene", "Hamilton",
+                                           "Herkimer", "Jefferson", "Lewis",
+                                           "Livingston", "Madison", "Monroe",
+                                           "Montgomery", "Nassau", "Niagara",
+                                           "Oneida", "Onondaga", "Ontario",
+                                           "Orange", "Orleans", "Oswego",
+                                           "Otsego", "Putnam", "Rensselaer",
+                                           "Rockland", "St. Lawrence", "Saratoga",
+                                           "Schenectady", "Schoharie", "Schuyler",
+                                           "Seneca", "Steuben", "Suffolk",
+                                           "Sullivan", "Tioga", "Tompkins",
+                                           "Ulster", "Warren", "Washington",
+                                           "Wayne", "Westchester", "Wyoming",
+                                           "Yates"))
+```
+ 
+ Using the acs.fetch function, we gather population and income data for our specfied area using an API provided by the Census Bureau. The code below will provide the total population, and median income for the counites we are interested in. 
+
+```{r}
+bigPop_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number ="B01003", key = acs_key)
+
+bigIncome_2015 <- acs.fetch(geo = big_geo, endyear = 2015, table.number =  "B19013", key = acs_key)
+```
+The ACS package will load this data as a distinct acs object. To make our data easier to work with we seperated the estimates and created a dataframe containing the population and median income acs data.  
+
+```{r}
+Big_income <- as.data.frame(bigIncome@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("median_income_2015" =B19013_001) 
+Big_income
+
+acs <- past_population %>%
+  inner_join(merged, by = "county") %>%
+  inner_join(Past_income, by = "county") %>%
+  inner_join(Big_income, by = "county") 
+```

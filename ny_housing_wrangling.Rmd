@@ -22,32 +22,18 @@ library(doParallel)
 
 ```{r}
 db <- dbConnect(MySQL(), user = 'stat231', password = 'stat231project', dbname = "nyhousing", host = '148.85.253.214')
-transactions <- tbl(db, "transactions")
 transactions_df <- dbReadTable(db, "transactions")
 ```
 
 ```{r}
-transactions <- transactions %>%
-  mutate(address_full = CONCAT(Address, ", ", Town, ", ", "NY"))
-
 transactions_df <- transactions_df %>%
   mutate(address_full = paste(Address, Town, "NY", sep = ", "))
-
-#small <- transactions %>%
- # filter(Town == 'Albany')
-#transactions2 <- transactions %>%
-#  filter(Town == "Rochester")
 ```
 
 ```{r}
 no_cores <- detectCores() - 1
 registerDoParallel(cores=no_cores)  
 cluster <- makeCluster(no_cores, type="FORK")
-#full_address <- transactions %>%
-#  select(address_full) %>%
-#  collect() %>%
-#  unlist() %>%
-#  as.vector()
 
 full_address <- transactions_df %>%
   select(address_full) %>%
@@ -76,30 +62,6 @@ transactions_df <- NULL
 geocodes <- NULL
 ```
 
-```
-pb <- tkProgressBar(title = "progress bar", min = 0,
-                    max = nrow(transactions), width = 300)
-
-for(i in 1:nrow(transactions2)) { ### Allows me to continue with errors
-  result <- tryCatch(geocode(transactions2$address_full[i], output = "latlon", source = "dsk"),
-                     error = function(e) data.frame(lon = NA, lat = NA, address = NA))
-  transactions2$lon[i] <- as.numeric(result[1])
-  transactions2$lat[i] <- as.numeric(result[2])
-  setTkProgressBar(pb, i, label=paste( round(i/nrow(transactions2)*100, 0),
-                                        "% done"))
-}
-
-close(pb)
-```
-
-
-``{r}
-transactions2 <- transactions2 %>%
-  mutate(SalePrice = REPLACE(SalePrice, ',', ''),
-         month = SUBSTRING_INDEX(SaleDate, '/', 1),
-         day = SUBSTRING_INDEX(SUBSTRING_INDEX(SaleDate, '/', 2), '/', -1),
-         year = SUBSTRING_INDEX(SaleDate, '/', -1))
-```
 ```{r}
 counties <- c("Albany", "Allegany", "Broome", "Cattaraugus", "Cayuga", 
               "Chautauqua", "Chemung", "Chenango", "Clinton", "Columbia",
@@ -164,6 +126,5 @@ transactions2 <- transactions2 %>%
 ```
 
 ```{r}
-#transactions2 <- collect(transactions2)
 dbWriteTable(db, "transactions2", transactions2, overwrite = TRUE)
 ```

@@ -1,5 +1,4 @@
 ---
----
 title: "population_wrangle"
 output: pdf_document
 ---
@@ -56,44 +55,117 @@ bigIncome_2009 <- acs.fetch(geo = big_geo, endyear = 2009, table.number =  "B190
 ```{r}
 library(dplyr)
 
-merged_pop <- as.data.frame(bigPop_2015@estimate) %>% 
+pop_2015 <- as.data.frame(bigPop_2015@estimate) %>% 
   mutate(county_full = rownames(.),
          county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county, B01003_001) %>% 
   rename("population_2015" = B01003_001) 
-merged
-```
 
-```{r}
-past_population <- as.data.frame(pastPop@estimate) %>% 
+pop_2014 <- as.data.frame(bigPop_2014@estimate) %>% 
   mutate(county_full = rownames(.),
          county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
-  select(county,B01003_001) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2014" = B01003_001) 
+
+pop_2013 <- as.data.frame(bigPop_2013@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2013" = B01003_001) 
+
+pop_2012 <- as.data.frame(bigPop_2012@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2012" = B01003_001) 
+
+pop_2011 <- as.data.frame(bigPop_2011@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2011" = B01003_001) 
+
+pop_2010 <- as.data.frame(bigPop_2010@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
   rename("population_2010" = B01003_001) 
-past_population
-```
 
-```{r}
-Big_income <- as.data.frame(bigIncome@estimate) %>% 
+pop_2009 <- as.data.frame(bigPop_2009@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county, B01003_001) %>% 
+  rename("population_2009" = B01003_001) 
+
+income_2015 <- as.data.frame(bigIncome_2015@estimate) %>% 
   mutate(county_full = rownames(.),
          county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B19013_001) %>% 
-  rename("median_income_2015" =B19013_001) 
-Big_income
+  rename("income_2015" = B19013_001)
 
-Past_income <- as.data.frame(past_income@estimate) %>% 
+income_2014 <- as.data.frame(bigIncome_2014@estimate) %>% 
   mutate(county_full = rownames(.),
          county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
   select(county,B19013_001) %>% 
-  rename("median_income_2010" = B19013_001) 
-Past_income
+  rename("income_2014" = B19013_001)
+
+income_2013 <- as.data.frame(bigIncome_2013@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("income_2013" = B19013_001)
+
+income_2012 <- as.data.frame(bigIncome_2012@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("income_2012" = B19013_001)
+
+income_2011 <- as.data.frame(bigIncome_2011@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("income_2011" = B19013_001)
+
+income_2010 <- as.data.frame(bigIncome_2010@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("income_2010" = B19013_001)
+
+income_2009 <- as.data.frame(bigIncome_2009@estimate) %>% 
+  mutate(county_full = rownames(.),
+         county = str_replace(county_full,"(.+) County.*","\\1")) %>% 
+  select(county,B19013_001) %>% 
+  rename("income_2009" = B19013_001)
 ```
 
+
 ```{r}
-acs <- past_population %>%
-  inner_join(merged, by = "county") %>%
-  inner_join(Past_income, by = "county") %>%
-  inner_join(Big_income, by = "county") 
+acs_pop <- pop_2015 %>%
+  inner_join(pop_2014, by = "county") %>%
+  inner_join(pop_2013, by = "county") %>%
+  inner_join(pop_2012, by = "county") %>%
+  inner_join(pop_2011, by = "county") %>%
+  inner_join(pop_2010, by = "county") %>%
+  inner_join(pop_2009, by = "county") %>% 
+  gather("year", "population", 2:8) %>%
+  mutate(year = gsub("population_", "", year)) %>%
+  mutate(year = as.numeric(year))
+
+acs_income <- income_2015 %>%
+  inner_join(income_2014, by = "county") %>%
+  inner_join(income_2013, by = "county") %>%
+  inner_join(income_2012, by = "county") %>%
+  inner_join(income_2011, by = "county") %>%
+  inner_join(income_2010, by = "county") %>%
+  inner_join(income_2009, by = "county") %>%
+  gather("year", "income", 2:8) %>%
+  mutate(year = gsub("income_", "", year)) %>%
+  mutate(year = as.numeric(year))
+
+acs <- acs_pop %>%
+  inner_join(acs_income, by = c("county", "year"))
 
 names(acs)[1] <- "County"
 ```
@@ -101,5 +173,3 @@ names(acs)[1] <- "County"
 ```{r}
 save(acs, file="acs.Rda")
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
